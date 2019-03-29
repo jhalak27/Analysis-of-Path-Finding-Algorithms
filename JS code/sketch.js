@@ -12,16 +12,41 @@ function heuristic(a,b){
 	return d;
 }
 
-var cols = 50;
-var rows = 50;
-var grid = new Array(cols);
+function PathDistance(shortestPath)
+{
+	var d=0;
+	for(var i=1;i<shortestPath.length;i++)
+	{
+		d += dist(shortestPath[i].i*w +w/2,shortestPath[i].j*h+h/2,shortestPath[i-1].i*w+w/2,shortestPath[i-1].j*h+h/2);
+		//console.log(d);
+	}
+	return d;
+}
 
+
+
+var cols = 25;
+var rows = 25;
+var grid = new Array(cols);
+var gridDij = new Array(cols);
 var openSet = [];
 var closedSet = [];
-var start;
-var end;
+var openSetDij = [];
+var closedSetDij = [];
+var start,startDij;
+var end,endDij;
 var w,h;
 var path = [];
+var pathDij = [];
+var doneA = false;
+var doneDij = false;
+var noSolA = false;
+var noSolDij = false;
+var stepsA = 1;
+var stepsDij = 1;
+var distanceA = 0;
+var distanceDij = 0;
+var endLoop = false;
 
 function Spot(i, j) {
 	this.i = i;
@@ -33,9 +58,9 @@ function Spot(i, j) {
 	this.previous = undefined;
 	this.wall = false;
 
-	if(random(1) < 0.3){
-		this.wall = true;
-	}
+	// if(random(1) < 0.3){
+	// 	this.wall = true;
+	// }
 	this.show = function(col) {
 		fill(col);
 		if(this.wall){
@@ -77,7 +102,7 @@ function Spot(i, j) {
 }
 
 function setup() {
-	createCanvas(400,400);
+	createCanvas(500,500);
 	console.log('A*');
 
 	w=width/cols;
@@ -92,22 +117,59 @@ function setup() {
 		}
 	}
 
+	//DIJKSTRA
+	for(var i=0;i<cols;i++){
+		gridDij[i] = new Array(rows);
+	}
+	
+	for(var i=0;i<cols;i++) {
+		for(var j=0;j<rows;j++) {
+			gridDij[i][j] = new Spot(i,j);
+		}
+	}
+
+	for(var i=0;i<cols;i++) {
+		for(var j=0;j<rows;j++) {
+			if(random(1) < 0.3){
+				grid[i][j].wall = true;
+				gridDij[i][j].wall = true;
+			}
+		}
+	}
+
 	for(var i=0;i<cols;i++) {
 		for(var j=0;j<rows;j++) {
 			grid[i][j].addNeighbors(grid);
 		}
 	}
 
+	
+
+	for(var i=0;i<cols;i++) {
+		for(var j=0;j<rows;j++) {
+			gridDij[i][j].addNeighbors(gridDij);
+		}
+	}
+
+	//DIJKSTRA END
+
+
 	start = grid[0][0];
 	end = grid[cols-1][rows-1];
 	start.wall = false;
 	end.wall = false;
 
+	startDij = gridDij[0][0];
+	endDij = gridDij[cols-1][rows-1];
+	startDij.wall = false;
+	endDij.wall = false;
+
 	openSet.push(start);
+	openSetDij.push(startDij);
 
 }
 
-function draw() {
+function draw() {	
 	
 	if(openSet.length > 0) {
 
@@ -119,13 +181,21 @@ function draw() {
 		}
 		var current = openSet[winner];
 
-		if(current===end){
-			noLoop();
-			console.log("DONE!");
+		if(doneA){
+			distanceA = PathDistance(path);
 		}
 
-		removeFromArray(openSet,current);
-		closedSet.push(current);
+		if(current===end && !doneA){
+			//noLoop();
+			doneA = true;
+			console.log("A* DONE in "+stepsA+" steps!");
+		}
+
+		if(!doneA){
+			removeFromArray(openSet,current);
+			closedSet.push(current);
+			stepsA++;
+		}
 
 		var neighbors = current.neighbors;
 
@@ -157,9 +227,72 @@ function draw() {
 
 	} else {
 		console.log('No Solution');
-		noLoop();
-		return;
+		noSolA = true;
+		//noLoop();
+		//return;
 	}
+
+	//DIJKSTRA
+	if(openSetDij.length > 0) {
+
+		var winnerDij = 0;
+		for(var i=0;i<openSetDij.length;i++){
+			if(openSetDij[i].f<openSetDij[winnerDij].f){
+				winnerDij = i;
+			}
+		}
+		var currentDij = openSetDij[winnerDij];
+
+		if(doneDij){
+			distanceDij = PathDistance(pathDij);
+		}
+
+		if(currentDij===endDij  && !doneDij){
+			//noLoop();
+			doneDij = true;
+			console.log("DIJKSTRA DONE in "+stepsDij+" steps!");
+		}
+
+		if(!doneDij){
+			removeFromArray(openSetDij,currentDij);
+			closedSetDij.push(currentDij);
+			stepsDij++;
+		}
+
+		var neighborsDij = currentDij.neighbors;
+
+		for(var i=0;i<neighborsDij.length;i++){
+			var neighborDij = neighborsDij[i];
+
+			if(!closedSetDij.includes(neighborDij) && !neighborDij.wall){
+				var tempGDij = currentDij.g + 1;
+
+				var newPathDij = false;
+				if(openSetDij.includes(neighborDij)){
+					if(tempGDij < neighborDij.g){
+						neighborDij.g = tempGDij;
+						newPathDij = true;
+					}
+				} else {
+					neighborDij.g = tempGDij;
+					openSetDij.push(neighborDij);
+					newPathDij = true;
+				}
+
+				if(newPathDij){
+					neighborDij.f = neighborDij.g;
+					neighborDij.previous = currentDij;
+				}
+			}
+		}
+
+	} else {
+		console.log('No Solution');
+		noSolDij = true;
+		//noLoop();
+		//return;
+	}
+	//END DIJKSTRA
 
 	background(255);
 
@@ -169,6 +302,18 @@ function draw() {
 		}
 	}
 
+	// for(var i=0;i<cols;i++){
+	// 	for(var j=0;j<rows;j++){
+	// 		fill(255,0,0);
+	// 		if(gridDij[i][j].wall){
+	// 			fill(0);
+	// 		}
+	// 		noStroke();
+	// 		ellipse(gridDij[i][j].i*w+w/2+300,gridDij[i][j].j*h+h/2,w-1,h-1);
+
+	// 	}
+	// }
+	
 	// for(var i=0;i<closedSet.length;i++){
 	// 	closedSet[i].show(color(255,0,0));
 	// }
@@ -176,24 +321,66 @@ function draw() {
 	// 	openSet[i].show(color(0,255,0));
 	// }
 
-	path = [];
-	var temp = current;
-	path.push(temp);
-	while(temp.previous){
-		path.push(temp.previous);
-		temp = temp.previous;
+	if(!noSolA){
+		path = [];
+		var temp = current;
+		path.push(temp);
+		while(temp.previous){
+			path.push(temp.previous);
+			temp = temp.previous;
+		}
+
+		noFill();
+		stroke(210,50,160);
+		strokeWeight(w/2);
+		beginShape();
+		for(var i=0;i<path.length;i++){
+			vertex(path[i].i*w+w/2,path[i].j*h+h/2);
+		}
+		endShape();
+	}
+
+
+	if(!noSolDij){
+		pathDij = [];
+		var tempDij = currentDij;
+		pathDij.push(tempDij);
+		while(tempDij.previous){
+			pathDij.push(tempDij.previous);
+			tempDij = tempDij.previous;
+		}
+
+		noFill();
+		stroke(0,50,160);
+		strokeWeight(w/2);
+		beginShape();
+		for(var i=0;i<pathDij.length;i++){
+			vertex(pathDij[i].i*w+w/2,pathDij[i].j*h+h/2);
+		}
+		endShape();
+
+		if(endLoop)
+		{
+			console.log("A* Path Distance: "+distanceA);
+			console.log("Dijkstra Path Distance: "+distanceDij);
+			noLoop();
+			return;
+		}
+
+		if(doneA && doneDij){
+			endLoop = true;
+			//noLoop();
+		}
 	}
 
 	// for(var i=0;i<path.length;i++){
 	// 	path[i].show(color(0,0,255));
 	// }
 
-	noFill();
-	stroke(210,50,160);
-	strokeWeight(w/2);
-	beginShape();
-	for(var i=0;i<path.length;i++){
-		vertex(path[i].i*w+w/2,path[i].j*h+h/2);
-	}
-	endShape();
+	
+
+
+	
+
 }
+ 
