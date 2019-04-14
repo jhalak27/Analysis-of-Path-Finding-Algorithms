@@ -136,7 +136,7 @@ function showFinalPath(){
 
 
 
-
+var startTime;
 var cols = 20;
 var rows = 20;
 var w,h;
@@ -239,6 +239,8 @@ function setup() {
 	w=width/cols;
 	h=height/rows;
 
+	startTime = Date.now();
+
 	//A* 
 	for(var i=0;i<cols;i++){
 		grid[i] = new Array(rows);
@@ -314,8 +316,8 @@ function setup() {
 	startDij.wall = false;
 	endDij.wall = false;
 
-	startBfs = gridBfs[cols-1][rows-1];
-	endBfs = gridBfs[0][0];
+	endBfs = gridBfs[cols-1][rows-1];
+	startBfs  = gridBfs[0][0];
 	startBfs.wall = false;
 	endBfs.wall = false;
 
@@ -347,7 +349,7 @@ function draw() {
 		if(current===end && !doneA){
 			//noLoop();
 			doneA = true;
-			console.log("A* DONE in "+stepsA+" steps!");
+			console.log("A* DONE in "+stepsA+" steps! and "+(Date.now()-startTime)/1000+" seconds.");
 		}
 
 		if(!doneA){
@@ -409,7 +411,7 @@ function draw() {
 		if(currentDij===endDij  && !doneDij){
 			//noLoop();
 			doneDij = true;
-			console.log("DIJKSTRA DONE in "+stepsDij+" steps!");
+			console.log("DIJKSTRA DONE in "+stepsDij+" steps! and "+(Date.now()-startTime)/1000+" seconds.");
 		}
 
 		if(!doneDij){
@@ -471,7 +473,7 @@ function draw() {
 		if(currentBfs===endBfs && !doneBfs){
 			//noLoop();
 			doneBfs = true;
-			console.log("BEST FIRST SEARCH DONE in "+stepsBfs+" steps!");
+			console.log("BEST FIRST SEARCH DONE in "+stepsBfs+" steps! and "+ (Date.now()-startTime)/1000+" seconds.");
 		}
 
 		if(!doneBfs){
