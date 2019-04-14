@@ -23,31 +23,149 @@ function PathDistance(shortestPath)
 	return d;
 }
 
+function SwitchGraph(x_id){
+	var x = document.getElementById(x_id).value;
+	if(x_id=="A"){
+		if(x=="Show A*"){
+			document.getElementById(x_id).value="Hide A*";
+			showA = true;
+			showFinalPath();
+		}
+		else if(x=="Hide A*"){
+			document.getElementById(x_id).value="Show A*";
+			showA = false;
+			showFinalPath();
+		}
+	}
+	if(x_id=="D"){
+		if(x=="Show Dijkstra"){
+			document.getElementById(x_id).value="Hide Dijkstra";
+			showDij = true;
+			showFinalPath();
+		}
+		else if(x=="Hide Dijkstra"){
+			document.getElementById(x_id).value="Show Dijkstra";
+			showDij = false;
+			showFinalPath();
+		}
+	}
+	if(x_id=="AOpp"){
+		if(x=="Show A* Backward"){
+			document.getElementById(x_id).value="Hide A* Backward";
+			showAOpp = true;
+			showFinalPath();
+		}
+		else if(x=="Hide A* Backward"){
+			document.getElementById(x_id).value="Show A* Backward";
+			showAOpp = false;
+			showFinalPath();
+		}
+	}
+
+}
+
+function showFinalPath(){
+	if(endLoop){
+		if(showA){
+			noFill();
+			stroke(210,50,160);
+			strokeWeight(w/2);
+			beginShape();
+			for(var i=0;i<finalPath.length;i++){
+				vertex(finalPath[i].i*w+w/2,finalPath[i].j*h+h/2);
+			}
+			endShape();
+		}
+		if(showDij){
+			noFill();
+			stroke(0,50,160);
+			strokeWeight(w/2);
+			beginShape();
+			for(var i=0;i<finalPathDij.length;i++){
+				vertex(finalPathDij[i].i*w+w/2,finalPathDij[i].j*h+h/2);
+			}
+			endShape();
+		}
+		if(showAOpp){
+			noFill();
+			stroke(50,250,50);
+			strokeWeight(w/2);
+			beginShape();
+			for(var i=0;i<finalPathOpp.length;i++){
+				vertex(finalPathOpp[i].i*w+w/2,finalPathOpp[i].j*h+h/2);
+			}
+			endShape();
+		}
+	}
+
+}
 
 
-var cols = 25;
-var rows = 25;
+// function mousePressed(){
+// 	var X = Math.floor(mouseX/w);
+// 	var Y = Math.floor(mouseY/h);
+// 	end = grid[X][Y];
+// 	endDij = gridDij[X][Y];
+// 	startOpp = gridOpp[X][Y];
+// 	closedSet = [];
+// 	closedSetDij = [];
+// 	closedSetOpp = [];
+// 	openSet = [];
+// 	openSetDij = [];
+// 	openSetOpp = [];
+// 	openSet.push(start);
+// 	openSetDij.push(startDij);
+// 	openSetOpp.push(startOpp);
+// }
+
+
+
+var cols = 20;
+var rows = 20;
+var w,h;
+var endLoop = false;
+//A*
 var grid = new Array(cols);
-var gridDij = new Array(cols);
 var openSet = [];
 var closedSet = [];
+var start;
+var end;
+var path = [];
+var doneA = false;
+var noSolA = false;
+var stepsA = 1;
+var distanceA = 0;
+var showA = true;
+var finalPath = [];
+//Dijkstra
+var gridDij = new Array(cols);
 var openSetDij = [];
 var closedSetDij = [];
-var start,startDij;
-var end,endDij;
-var w,h;
-var path = [];
+var startDij;
+var endDij;
 var pathDij = [];
-var doneA = false;
 var doneDij = false;
-var noSolA = false;
 var noSolDij = false;
-var stepsA = 1;
 var stepsDij = 1;
-var distanceA = 0;
 var distanceDij = 0;
-var endLoop = false;
+var showDij = true;
+var finalPathDij = [];
+//Aopp
+var gridOpp = new Array(cols);
+var openSetOpp = [];
+var closedSetOpp = [];
+var startOpp;
+var endOpp;
+var pathOpp = [];
+var doneAOpp = false;
+var noSolAOpp = false;
+var stepsAOpp = 1;
+var distanceAOpp = 0;
+var showAOpp = false;
+var finalPathOpp = [];
 
+
+// DEFINING PROPERTIES OF EACH CELL/SPOT
 function Spot(i, j) {
 	this.i = i;
 	this.j = j;
@@ -58,9 +176,6 @@ function Spot(i, j) {
 	this.previous = undefined;
 	this.wall = false;
 
-	// if(random(1) < 0.3){
-	// 	this.wall = true;
-	// }
 	this.show = function(col) {
 		fill(col);
 		if(this.wall){
@@ -68,7 +183,6 @@ function Spot(i, j) {
 		}
 		noStroke();
 		ellipse(this.i*w+w/2,this.j*h+h/2,w-1,h-1);
-		//rect(this.i*w,this.j*h,w-1,h-1);
 	}
 
 	this.addNeighbors = function(grid){
@@ -101,6 +215,9 @@ function Spot(i, j) {
 	}
 }
 
+
+// SETUP FUNCTION
+
 function setup() {
 	createCanvas(500,500);
 	console.log('A*');
@@ -128,22 +245,35 @@ function setup() {
 		}
 	}
 
+	//A* OPPOSITE
+	for(var i=0;i<cols;i++){
+		gridOpp[i] = new Array(rows);
+	}
+	
+	for(var i=0;i<cols;i++) {
+		for(var j=0;j<rows;j++) {
+			gridOpp[i][j] = new Spot(i,j);
+		}
+	}
+
+	// RANDOMIZE OBSTACLES
 	for(var i=0;i<cols;i++) {
 		for(var j=0;j<rows;j++) {
 			if(random(1) < 0.3){
 				grid[i][j].wall = true;
 				gridDij[i][j].wall = true;
+				gridOpp[i][j].wall = true;
 			}
 		}
 	}
 
+
+	// ADDING NEIGHBOURS OF EACH CELL
 	for(var i=0;i<cols;i++) {
 		for(var j=0;j<rows;j++) {
 			grid[i][j].addNeighbors(grid);
 		}
 	}
-
-	
 
 	for(var i=0;i<cols;i++) {
 		for(var j=0;j<rows;j++) {
@@ -151,7 +281,11 @@ function setup() {
 		}
 	}
 
-	//DIJKSTRA END
+	for(var i=0;i<cols;i++) {
+		for(var j=0;j<rows;j++) {
+			gridOpp[i][j].addNeighbors(gridOpp);
+		}
+	}
 
 
 	start = grid[0][0];
@@ -164,11 +298,20 @@ function setup() {
 	startDij.wall = false;
 	endDij.wall = false;
 
+	startOpp = gridOpp[cols-1][rows-1];
+	endOpp = gridOpp[0][0];
+	startOpp.wall = false;
+	endOpp.wall = false;
+
 	openSet.push(start);
 	openSetDij.push(startDij);
+	openSetOpp.push(startOpp);
+	
 
 }
 
+
+// DRAW FUNCTION
 function draw() {	
 	
 	if(openSet.length > 0) {
@@ -294,8 +437,74 @@ function draw() {
 	}
 	//END DIJKSTRA
 
+
+	// A* OPPOSITE
+	if(openSetOpp.length > 0) {
+		var winnerOpp = 0;
+		for(var i=0;i<openSetOpp.length;i++){
+			if(openSetOpp[i].f<openSetOpp[winnerOpp].f){
+				winnerOpp = i;
+			}
+		}
+		var currentOpp = openSetOpp[winnerOpp];
+
+		if(doneAOpp){
+			distanceAOpp = PathDistance(pathOpp);
+		}
+
+		if(currentOpp===endOpp && !doneAOpp){
+			//noLoop();
+			doneAOpp = true;
+			console.log("A* OPPOSITE DONE in "+stepsAOpp+" steps!");
+		}
+
+		if(!doneAOpp){
+			removeFromArray(openSetOpp,currentOpp);
+			closedSetOpp.push(currentOpp);
+			stepsAOpp++;
+		}
+
+		var neighborsOpp = currentOpp.neighbors;
+
+		for(var i=0;i<neighborsOpp.length;i++){
+			var neighborOpp = neighborsOpp[i];
+
+			if(!closedSetOpp.includes(neighborOpp) && !neighborOpp.wall){
+				var tempGOpp = currentOpp.g + 1;
+
+				var newPathOpp = false;
+				if(openSetOpp.includes(neighborOpp)){
+					if(tempGOpp < neighborOpp.g){
+						neighborOpp.g = tempGOpp;
+						newPathOpp = true;
+					}
+				} else {
+					neighborOpp.g = tempGOpp;
+					openSetOpp.push(neighborOpp);
+					newPathOpp = true;
+				}
+
+				if(newPathOpp){
+					neighborOpp.h = heuristic(neighborOpp,endOpp);
+					neighborOpp.f = neighborOpp.g + neighborOpp.h;
+					neighborOpp.previous = currentOpp;
+				}
+			}
+		}
+
+	} else {
+		console.log('No Solution');
+		noSolAOpp = true;
+		//noLoop();
+		//return;
+	}
+
+	// END A* OPPOSITE
+
+
 	background(255);
 
+	// SHOWING THE GRID
 	for (var i=0;i<cols;i++){
 		for(var j=0;j<rows;j++){
 			grid[i][j].show(color(255));
@@ -330,14 +539,16 @@ function draw() {
 			temp = temp.previous;
 		}
 
-		noFill();
-		stroke(210,50,160);
-		strokeWeight(w/2);
-		beginShape();
-		for(var i=0;i<path.length;i++){
-			vertex(path[i].i*w+w/2,path[i].j*h+h/2);
+		if(showA){
+			noFill();
+			stroke(210,50,160);
+			strokeWeight(w/2);
+			beginShape();
+			for(var i=0;i<path.length;i++){
+				vertex(path[i].i*w+w/2,path[i].j*h+h/2);
+			}
+			endShape();
 		}
-		endShape();
 	}
 
 
@@ -350,24 +561,83 @@ function draw() {
 			tempDij = tempDij.previous;
 		}
 
-		noFill();
-		stroke(0,50,160);
-		strokeWeight(w/2);
-		beginShape();
-		for(var i=0;i<pathDij.length;i++){
-			vertex(pathDij[i].i*w+w/2,pathDij[i].j*h+h/2);
+		if(showDij){
+			noFill();
+			stroke(0,50,160);
+			strokeWeight(w/2);
+			beginShape();
+			for(var i=0;i<pathDij.length;i++){
+				vertex(pathDij[i].i*w+w/2,pathDij[i].j*h+h/2);
+			}
+			endShape();
+		}	
+		
+	}
+
+	if(!noSolAOpp){
+		pathOpp = [];
+		var tempOpp = currentOpp;
+		pathOpp.push(tempOpp);
+		while(tempOpp.previous){
+			pathOpp.push(tempOpp.previous);
+			tempOpp = tempOpp.previous;
 		}
-		endShape();
+
+		if(showAOpp){
+			noFill();
+			stroke(50,250,50);
+			strokeWeight(w/2);
+			beginShape();
+			for(var i=0;i<pathOpp.length;i++){
+				vertex(pathOpp[i].i*w+w/2,pathOpp[i].j*h+h/2);
+			}
+			endShape();
+		}	
 
 		if(endLoop)
 		{
 			console.log("A* Path Distance: "+distanceA);
 			console.log("Dijkstra Path Distance: "+distanceDij);
+			console.log("A* OPP Path Distance: "+distanceAOpp);
 			noLoop();
+			finalPath = path;
+			//path = [];
+			finalPathDij = pathDij;
+			//pathDij = [];
+			finalPathOpp = pathOpp;
+			//pathOpp = [];
+			noFill();
+			stroke(255,255,255);
+			strokeWeight(w/2);
+			beginShape();
+			for(var i=0;i<path.length;i++){
+				vertex(path[i].i*w+w/2,path[i].j*h+h/2);
+			}
+			endShape();
+
+			noFill();
+			stroke(255,255,255);
+			strokeWeight(w/2);
+			beginShape();
+			for(var i=0;i<pathDij.length;i++){
+				vertex(pathDij[i].i*w+w/2,pathDij[i].j*h+h/2);
+			}
+			endShape();
+			
+			noFill();
+			stroke(255,255,255);
+			strokeWeight(w/2);
+			beginShape();
+			for(var i=0;i<pathOpp.length;i++){
+				vertex(pathOpp[i].i*w+w/2,pathOpp[i].j*h+h/2);
+			}
+			endShape();
+
+			showFinalPath();
 			return;
 		}
 
-		if(doneA && doneDij){
+		if(doneA && doneDij && doneAOpp){
 			endLoop = true;
 			//noLoop();
 		}
@@ -376,11 +646,5 @@ function draw() {
 	// for(var i=0;i<path.length;i++){
 	// 	path[i].show(color(0,0,255));
 	// }
-
-	
-
-
-	
-
 }
- 
+
