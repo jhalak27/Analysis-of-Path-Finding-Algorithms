@@ -21,6 +21,10 @@ function heuristic2(a,b){
 	//var d = abs(a.i-b.i) + abs(a.j-b.j);
 	return 500*d+1000;
 }
+function heuristic3(a,b){
+	var d = Math.max(abs(a.i-b.i),abs(a.j-b.j));
+	return d;
+}
 
 
 function PathDistance(shortestPath)
@@ -72,6 +76,18 @@ function SwitchGraph(x_id){
 			showFinalPath();
 		}
 	}
+	if(x_id=="Dia"){
+		if(x=="Show Diagonal"){
+			document.getElementById(x_id).value="Hide Diagonal";
+			showD = true;
+			showFinalPath();
+		}
+		else if(x=="Hide Diagonal"){
+			document.getElementById(x_id).value="Show Diagonal";
+			showD = false;
+			showFinalPath();
+		}
+	}
 
 }
 
@@ -83,7 +99,7 @@ function showFinalPath(){
 			strokeWeight(w/4);
 			beginShape();
 			for(var i=0;i<finalPath.length;i++){
-				vertex(finalPath[i].i*w+w/2,finalPath[i].j*h+h/2+h/5);
+				vertex(finalPath[i].i*w+w/2,finalPath[i].j*h+h/2+h/3);
 			}
 			endShape();
 		}
@@ -103,7 +119,17 @@ function showFinalPath(){
 			strokeWeight(w/4);
 			beginShape();
 			for(var i=0;i<finalPathOpp.length;i++){
-				vertex(finalPathOpp[i].i*w+w/2,finalPathOpp[i].j*h+h/2-h/5);
+				vertex(finalPathOpp[i].i*w+w/2,finalPathOpp[i].j*h+h/2-h/3);
+			}
+			endShape();
+		}
+		if(!showD){
+			noFill();
+			stroke(255);
+			strokeWeight(w/4);
+			beginShape();
+			for(var i=0;i<finalPathD.length;i++){
+				vertex(finalPathD[i].i*w+w/2,finalPathD[i].j*h+h/2-h/3);
 			}
 			endShape();
 		}
@@ -114,7 +140,7 @@ function showFinalPath(){
 			strokeWeight(w/5);
 			beginShape();
 			for(var i=0;i<finalPath.length;i++){
-				vertex(finalPath[i].i*w+w/2,finalPath[i].j*h+h/2+h/5);
+				vertex(finalPath[i].i*w+w/2,finalPath[i].j*h+h/2+h/3);
 			}
 			endShape();
 		}
@@ -134,7 +160,17 @@ function showFinalPath(){
 			strokeWeight(w/5);
 			beginShape();
 			for(var i=0;i<finalPathOpp.length;i++){
-				vertex(finalPathOpp[i].i*w+w/2,finalPathOpp[i].j*h+h/2-h/5);
+				vertex(finalPathOpp[i].i*w+w/2,finalPathOpp[i].j*h+h/2-h/3);
+			}
+			endShape();
+		}
+		if(showD){
+			noFill();
+			stroke(222, 243, 29);
+			strokeWeight(w/5);
+			beginShape();
+			for(var i=0;i<finalPathD.length;i++){
+				vertex(finalPathD[i].i*w+w/2,finalPathD[i].j*h+h/2-h/3);
 			}
 			endShape();
 		}
@@ -205,6 +241,20 @@ var stepsAOpp = 1;
 var distanceAOpp = 0;
 var showAOpp = true;
 var finalPathOpp = [];
+
+//Diagonal
+var gridD = new Array(cols);
+var openSetD = [];
+var closedSetD = [];
+var startD;
+var endD;
+var pathD = [];
+var doneD = false;
+var noSolD = false;
+var stepsD = 1;
+var distanceD = 0;
+var showD = true;
+var finalPathD = [];
 
 
 // DEFINING PROPERTIES OF EACH CELL/SPOT
@@ -300,6 +350,17 @@ function setup() {
 		}
 	}
 
+	//Diagonal
+	for(var i=0;i<cols;i++){
+		gridD[i] = new Array(rows);
+	}
+	
+	for(var i=0;i<cols;i++) {
+		for(var j=0;j<rows;j++) {
+			gridD[i][j] = new Spot(i,j);
+		}
+	}
+
 	// RANDOMIZE OBSTACLES
 	for(var i=0;i<cols;i++) {
 		for(var j=0;j<rows;j++) {
@@ -307,6 +368,7 @@ function setup() {
 				grid[i][j].wall = true;
 				gridMan[i][j].wall = true;
 				gridOpp[i][j].wall = true;
+				gridD[i][j].wall = true;
 			}
 		}
 	}
@@ -331,6 +393,12 @@ function setup() {
 		}
 	}
 
+	for(var i=0;i<cols;i++) {
+		for(var j=0;j<rows;j++) {
+			gridD[i][j].addNeighbors(gridD);
+		}
+	}
+
 
 	start = grid[0][0];
 	end = grid[cols-1][rows-1];
@@ -347,10 +415,15 @@ function setup() {
 	startOpp.wall = false;
 	endOpp.wall = false;
 
+	endD = gridD[cols-1][rows-1];
+	startD = gridD[0][0];
+	startD.wall = false;
+	endD.wall = false;
+
 	openSet.push(start);
 	openSetMan.push(startMan);
 	openSetOpp.push(startOpp);
-	
+	openSetD.push(startD);
 	startTime = Date.now();
 
 }
@@ -548,6 +621,70 @@ function draw() {
 
 	// END A* OPPOSITE
 
+	// Diagonal
+	if(openSetD.length > 0) {
+		var winnerD = 0;
+		for(var i=0;i<openSetD.length;i++){
+			if(openSetD[i].f<openSetD[winnerD].f){
+				winnerD = i;
+			}
+		}
+		var currentD = openSetD[winnerD];
+
+		if(doneD){
+			distanceD = PathDistance(pathD);
+		}
+
+		if(currentD===endD && !doneD){
+			//noLoop();
+			doneD = true;
+			console.log("Diagonal DONE in "+stepsD+" steps! and "+(Date.now()-startTime)/1000+" seconds.");
+		}
+
+
+		if(!doneD){
+			removeFromArray(openSetD,currentD);
+			closedSetD.push(currentD);
+			stepsD++;
+		}
+
+		var neighborsD = currentD.neighbors;
+
+		for(var i=0;i<neighborsD.length;i++){
+			var neighborD = neighborsD[i];
+
+			if(!closedSetD.includes(neighborD) && !neighborD.wall){
+				var tempGD = currentD.g + 1;
+
+				var newPathD = false;
+				if(openSetD.includes(neighborD)){
+					if(tempGD < neighborD.g){
+						neighborD.g = tempGD;
+						newPathD = true;
+					}
+				} else {
+					neighborD.g = tempGD;
+					openSetD.push(neighborD);
+					newPathD = true;
+				}
+
+				if(newPathD){
+					neighborD.h = heuristic3(neighborD,endD);
+					neighborD.f = neighborD.g + neighborD.h;
+					neighborD.previous = currentD;
+				}
+			}
+		}
+
+	} else {
+		console.log('No Solution');
+		noSolD = true;
+		//noLoop();
+		//return;
+	}
+
+	// END Diagonal
+
 
 	background(255);
 
@@ -620,6 +757,27 @@ function draw() {
 		}	
 		
 	}
+	if(!noSolD){
+		pathD = [];
+		var tempD = currentD;
+		pathD.push(tempD);
+		while(tempD.previous){
+			pathD.push(tempD.previous);
+			tempD = tempD.previous;
+		}
+
+		if(showD){
+			noFill();
+			stroke(222, 243, 29);
+			strokeWeight(w/5);
+			beginShape();
+			for(var i=0;i<pathD.length;i++){
+				vertex(pathD[i].i*w+w/2,pathD[i].j*h+h/2-h/3);
+			}
+			endShape();
+		}	
+		
+	}
 
 	if(!noSolAOpp){
 		pathOpp = [];
@@ -646,6 +804,7 @@ function draw() {
 			console.log("Euclidean Path Distance: "+distanceA);
 			console.log("Manhatten Path Distance: "+distanceMan);
 			console.log("Overestimate Path Distance: "+distanceAOpp);
+			console.log("Diagonal Path Distance: "+distanceD);
 			noLoop();
 			finalPath = path;
 			//path = [];
@@ -653,6 +812,7 @@ function draw() {
 			//pathMan = [];
 			finalPathOpp = pathOpp;
 			//pathOpp = [];
+			finalPathD = pathD;
 			noFill();
 			stroke(255,255,255);
 			strokeWeight(w/5);
@@ -680,11 +840,20 @@ function draw() {
 			}
 			endShape();
 
+			noFill();
+			stroke(255,255,255);
+			strokeWeight(w/5);
+			beginShape();
+			for(var i=0;i<pathD.length;i++){
+				vertex(pathD[i].i*w+w/2,pathD[i].j*h+h/2-h/5);
+			}
+			endShape();
+
 			showFinalPath();
 			return;
 		}
 
-		if(doneA && doneMan && doneAOpp){
+		if(doneA && doneMan && doneAOpp && doneD){
 			endLoop = true;
 			//noLoop();
 		}
