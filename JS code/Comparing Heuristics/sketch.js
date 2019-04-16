@@ -22,6 +22,7 @@ function heuristic2(a,b){
 	return 500*d+1000;
 }
 
+
 function PathDistance(shortestPath)
 {
 	var d=0;
@@ -36,13 +37,13 @@ function PathDistance(shortestPath)
 function SwitchGraph(x_id){
 	var x = document.getElementById(x_id).value;
 	if(x_id=="A"){
-		if(x=="Show A*"){
-			document.getElementById(x_id).value="Hide A*";
+		if(x=="Show Euclidean"){
+			document.getElementById(x_id).value="Hide Euclidean";
 			showA = true;
 			showFinalPath();
 		}
-		else if(x=="Hide A*"){
-			document.getElementById(x_id).value="Show A*";
+		else if(x=="Hide Euclidean"){
+			document.getElementById(x_id).value="Show Euclidean";
 			showA = false;
 			showFinalPath();
 		}
@@ -60,13 +61,13 @@ function SwitchGraph(x_id){
 		}
 	}
 	if(x_id=="AOpp"){
-		if(x=="Show A* (faster)"){
-			document.getElementById(x_id).value="Hide A* (faster)";
+		if(x=="Show Overestimate"){
+			document.getElementById(x_id).value="Hide Overestimate";
 			showAOpp = true;
 			showFinalPath();
 		}
-		else if(x=="Hide A* (faster)"){
-			document.getElementById(x_id).value="Show A* (faster)";
+		else if(x=="Hide Overestimate"){
+			document.getElementById(x_id).value="Show Overestimate";
 			showAOpp = false;
 			showFinalPath();
 		}
@@ -76,6 +77,37 @@ function SwitchGraph(x_id){
 
 function showFinalPath(){
 	if(endLoop){
+		if(!showA){
+			noFill();
+			stroke(255);
+			strokeWeight(w/4);
+			beginShape();
+			for(var i=0;i<finalPath.length;i++){
+				vertex(finalPath[i].i*w+w/2,finalPath[i].j*h+h/2+h/5);
+			}
+			endShape();
+		}
+		if(!showMan){
+			noFill();
+			stroke(255);
+			strokeWeight(w/4);
+			beginShape();
+			for(var i=0;i<finalPathMan.length;i++){
+				vertex(finalPathMan[i].i*w+w/2,finalPathMan[i].j*h+h/2);
+			}
+			endShape();
+		}
+		if(!showAOpp){
+			noFill();
+			stroke(255);
+			strokeWeight(w/4);
+			beginShape();
+			for(var i=0;i<finalPathOpp.length;i++){
+				vertex(finalPathOpp[i].i*w+w/2,finalPathOpp[i].j*h+h/2-h/5);
+			}
+			endShape();
+		}
+		
 		if(showA){
 			noFill();
 			stroke(210,50,160);
@@ -129,7 +161,7 @@ function showFinalPath(){
 // }
 
 
-
+var startTime;
 var cols = 100;
 var rows = 100;
 var w,h;
@@ -234,6 +266,8 @@ function setup() {
 
 	w=width/cols;
 	h=height/rows;
+
+
 	for(var i=0;i<cols;i++){
 		grid[i] = new Array(rows);
 	}
@@ -317,6 +351,7 @@ function setup() {
 	openSetMan.push(startMan);
 	openSetOpp.push(startOpp);
 	
+	startTime = Date.now();
 
 }
 
@@ -341,7 +376,7 @@ function draw() {
 		if(current===end && !doneA){
 			//noLoop();
 			doneA = true;
-			console.log("A* DONE in "+stepsA+" steps!");
+			console.log("Euclidean DONE in "+stepsA+" steps! and "+(Date.now()-startTime)/1000+" seconds.");
 		}
 
 		if(!doneA){
@@ -400,10 +435,10 @@ function draw() {
 			distanceMan = PathDistance(pathMan);
 		}
 
-		if(currentMan===endMan  && !doneMan){
+		if(currentMan===endMan && !doneMan){
 			//noLoop();
 			doneMan = true;
-			console.log("Manhatten DONE in "+stepsMan+" steps!");
+			console.log("Manhatten DONE in "+stepsA+" steps! and "+(Date.now()-startTime)/1000+" seconds.");
 		}
 
 		if(!doneMan){
@@ -466,8 +501,9 @@ function draw() {
 		if(currentOpp===endOpp && !doneAOpp){
 			//noLoop();
 			doneAOpp = true;
-			console.log("A* OPPOSITE DONE in "+stepsAOpp+" steps!");
+			console.log("Overestimate DONE in "+stepsA+" steps! and "+(Date.now()-startTime)/1000+" seconds.");
 		}
+
 
 		if(!doneAOpp){
 			removeFromArray(openSetOpp,currentOpp);
@@ -607,9 +643,9 @@ function draw() {
 
 		if(endLoop)
 		{
-			console.log("A* Path Distance: "+distanceA);
+			console.log("Euclidean Path Distance: "+distanceA);
 			console.log("Manhatten Path Distance: "+distanceMan);
-			console.log("A* OPP Path Distance: "+distanceAOpp);
+			console.log("Overestimate Path Distance: "+distanceAOpp);
 			noLoop();
 			finalPath = path;
 			//path = [];

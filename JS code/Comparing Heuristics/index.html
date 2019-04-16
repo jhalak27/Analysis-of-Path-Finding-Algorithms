@@ -9,11 +9,12 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.0/js/bootstrap.min.js"></script>
   </head>
   <body>
-    <h1>A*</h1>
+    <h1>Comparing Heuristics</h1>
+
     <div class="container">
-      <input type="submit" onclick='SwitchGraph("A")' id="A" value="Hide A*" class="btn btn-info">
-      <input type="submit" onclick='SwitchGraph("D")' id="D" value="Hide Manhatten" class="btn btn-info">
-      <input type="submit" onclick='SwitchGraph("AOpp")' id="AOpp" value="Hide A* (faster)" class="btn btn-info">
+      <input type="submit" onclick='SwitchGraph("A")' id="A" value="Hide Euclidean" class="btn btn-info" style="background-color:rgb(210,50,160)">
+      <input type="submit" onclick='SwitchGraph("D")' id="D" value="Hide Manhatten" class="btn btn-info" style="background-color:rgb(0,50,160)">
+      <input type="submit" onclick='SwitchGraph("AOpp")' id="AOpp" value="Hide Overestimate" class="btn btn-info" style="background-color:rgb(50,250,50)">
     </div>
   </body>
 </html>
