@@ -438,7 +438,7 @@ function draw() {
 		if(currentMan===endMan && !doneMan){
 			//noLoop();
 			doneMan = true;
-			console.log("Manhatten DONE in "+stepsA+" steps! and "+(Date.now()-startTime)/1000+" seconds.");
+			console.log("Manhatten DONE in "+stepsMan+" steps! and "+(Date.now()-startTime)/1000+" seconds.");
 		}
 
 		if(!doneMan){
@@ -501,7 +501,7 @@ function draw() {
 		if(currentOpp===endOpp && !doneAOpp){
 			//noLoop();
 			doneAOpp = true;
-			console.log("Overestimate DONE in "+stepsA+" steps! and "+(Date.now()-startTime)/1000+" seconds.");
+			console.log("Overestimate DONE in "+stepsAOpp+" steps! and "+(Date.now()-startTime)/1000+" seconds.");
 		}
 
 
