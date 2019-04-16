@@ -1,3 +1,49 @@
+function getSelections(){
+	rows = document.getElementById("rowselect").value;
+	cols = document.getElementById("colselect").value;
+	randomVal = document.getElementById("randselect").value;
+	endLoop = false;
+
+	grid = new Array(cols);
+	openSet = [];
+	closedSet = [];
+	path = [];
+	doneA = false;
+	noSolA = false;
+	stepsA = 1;
+	distanceA = 0;
+	showA = true;
+	finalPath = [];
+	//Dijkstra
+	gridDij = new Array(cols);
+	openSetDij = [];
+	closedSetDij = [];
+	pathDij = [];
+	doneDij = false;
+	noSolDij = false;
+	stepsDij = 1;
+	distanceDij = 0;
+	showDij = true;
+	finalPathDij = [];
+	//Best first search
+	gridBfs = new Array(cols);
+	openSetBfs = [];
+	closedSetBfs = [];
+	pathBfs = [];
+	doneBfs = false;
+	noSolBfs = false;
+	stepsBfs = 1;
+	distanceBfs = 0;
+	showBfs = true;
+	finalPathBfs = [];
+
+
+	SetupCall();
+	loop();
+	redraw();
+	
+}
+
 function removeFromArray(arr,elt){
 	for(var i =arr.length-1;i>=0;i--){
 		if(arr[i] == elt) {
@@ -137,9 +183,10 @@ function showFinalPath(){
 
 
 var startTime;
-var cols = 20;
-var rows = 20;
+var cols = 25;
+var rows = 25;
 var w,h;
+randomVal = 0.3;
 var endLoop = false;
 //A*
 var grid = new Array(cols);
@@ -233,8 +280,14 @@ function Spot(i, j) {
 }
 
 function setup() {
+	
+	SetupCall();
+
+}
+
+function SetupCall() {
 	createCanvas(500,500);
-	console.log('A*');
+	console.log('IMPLEMENTING');
 
 	w=width/cols;
 	h=height/rows;
@@ -277,7 +330,7 @@ function setup() {
 	// RANDOMIZE OBSTACLES
 	for(var i=0;i<cols;i++) {
 		for(var j=0;j<rows;j++) {
-			if(random(1) < 0.3){
+			if(random(1) < randomVal){
 				grid[i][j].wall = true;
 				gridDij[i][j].wall = true;
 				gridBfs[i][j].wall = true;
@@ -324,8 +377,6 @@ function setup() {
 	openSet.push(start);
 	openSetDij.push(startDij);
 	openSetBfs.push(startBfs);
-	
-
 }
 
 
