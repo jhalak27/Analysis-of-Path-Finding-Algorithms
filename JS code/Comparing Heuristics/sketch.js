@@ -179,27 +179,11 @@ function showFinalPath(){
 }
 
 
-// function mousePressed(){
-// 	var X = Math.floor(mouseX/w);
-// 	var Y = Math.floor(mouseY/h);
-// 	end = grid[X][Y];
-// 	endMan = gridMan[X][Y];
-// 	startOpp = gridOpp[X][Y];
-// 	closedSet = [];
-// 	closedSetMan = [];
-// 	closedSetOpp = [];
-// 	openSet = [];
-// 	openSetMan = [];
-// 	openSetOpp = [];
-// 	openSet.push(start);
-// 	openSetMan.push(startMan);
-// 	openSetOpp.push(startOpp);
-// }
 
 
 var startTime;
-var cols = 100;
-var rows = 100;
+var cols = 50;
+var rows = 50;
 var w,h;
 var endLoop = false;
 //A*
